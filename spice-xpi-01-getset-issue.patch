@@ -1,0 +1,664 @@
+From 9f9d744e9ea2eb09750e0c333c6301327b373a51 Mon Sep 17 00:00:00 2001
+From: Peter Hatina <phatina@redhat.com>
+Date: Tue, 22 Mar 2011 09:58:23 +0100
+Subject: [PATCH] nsPluginInstance getter/setter security issues fixed
+
+---
+ SpiceXPI/src/plugin/nsScriptablePeer.cpp |   85 +++----------
+ SpiceXPI/src/plugin/plugin.cpp           |  191 +++++++++++++++---------------
+ SpiceXPI/src/plugin/plugin.h             |   68 ++++++------
+ 3 files changed, 150 insertions(+), 194 deletions(-)
+
+diff --git a/SpiceXPI/src/plugin/nsScriptablePeer.cpp b/SpiceXPI/src/plugin/nsScriptablePeer.cpp
+index c3818be..c3949f2 100644
+--- a/SpiceXPI/src/plugin/nsScriptablePeer.cpp
++++ b/SpiceXPI/src/plugin/nsScriptablePeer.cpp
+@@ -300,15 +300,6 @@ AllocateScriptablePluginObject(NPP npp, NPClass *aClass)
+   return new ScriptablePluginObject(npp);
+ }
+ 
+-static char * stringCopy(char *src)
+-{
+-  char* dest = (char *)NPN_MemAlloc(strlen(src) + 1);
+-  if (dest) {    
+-    strcpy(dest, src);
+-  }
+-  return dest;
+-}
+-
+ bool
+ ScriptablePluginObject::HasMethod(NPIdentifier name)
+ {
+@@ -353,99 +344,61 @@ ScriptablePluginObject::GetProperty(NPIdentifier name, NPVariant *result)
+     return true;
+ 
+   if (name == hostIP_id) {
+-    char *tmp;
+-    mPlugin->GetHostIP(&tmp);
+-    STRINGZ_TO_NPVARIANT(stringCopy(tmp), *result);
++    STRINGZ_TO_NPVARIANT(mPlugin->GetHostIP(), *result);
+   }
+   else if (name == port_id) {
+-    char *tmp;
+-    mPlugin->GetPort(&tmp);
+-    STRINGZ_TO_NPVARIANT(stringCopy(tmp), *result);
++    STRINGZ_TO_NPVARIANT(mPlugin->GetPort(), *result);
+   }
+   else if (name == SecurePort_id) {
+-    char *tmp;
+-    mPlugin->GetSecurePort(&tmp);
+-    STRINGZ_TO_NPVARIANT(stringCopy(tmp), *result);
++    STRINGZ_TO_NPVARIANT(mPlugin->GetSecurePort(), *result);
+   }
+   else if (name == Password_id) {
+-    char *tmp;
+-    mPlugin->GetPassword(&tmp);
+-    STRINGZ_TO_NPVARIANT(stringCopy(tmp), *result);
++    STRINGZ_TO_NPVARIANT(mPlugin->GetPassword(), *result);
+   }
+   else if (name == CipherSuite_id) {
+-    char *tmp;
+-    mPlugin->GetCipherSuite(&tmp);
+-    STRINGZ_TO_NPVARIANT(stringCopy(tmp), *result);
++    STRINGZ_TO_NPVARIANT(mPlugin->GetCipherSuite(), *result);
+   }
+   else if (name == SSLChannels_id) {
+-    char *tmp;
+-    mPlugin->GetSSLChannels(&tmp);
+-    STRINGZ_TO_NPVARIANT(stringCopy(tmp), *result);
++    STRINGZ_TO_NPVARIANT(mPlugin->GetSSLChannels(), *result);
+   }
+   else if (name == TrustStore_id) {
+-      char *tmp;
+-      mPlugin->GetTrustStore(&tmp);
+-      STRINGZ_TO_NPVARIANT(stringCopy(tmp), *result);
++      STRINGZ_TO_NPVARIANT(mPlugin->GetTrustStore(), *result);
+   }
+   else if (name == HostSubject_id) {
+-      char *tmp;
+-      mPlugin->GetHostSubject(&tmp);
+-      STRINGZ_TO_NPVARIANT(stringCopy(tmp), *result);
++      STRINGZ_TO_NPVARIANT(mPlugin->GetHostSubject(), *result);
+   }
+   else if (name == fullScreen_id) {
+-    PRBool aFullScreen;
+-    mPlugin->GetFullScreen(&aFullScreen);
+-    BOOLEAN_TO_NPVARIANT(aFullScreen, *result);
++    BOOLEAN_TO_NPVARIANT(mPlugin->GetFullScreen(), *result);
+   }
+   else if (name == AdminConsole_id) {
+-    PRBool aAdminConsole;
+-    mPlugin->GetAdminConsole(&aAdminConsole);
+-    BOOLEAN_TO_NPVARIANT(aAdminConsole, *result);
++    BOOLEAN_TO_NPVARIANT(mPlugin->GetAdminConsole(), *result);
+   }
+   else if (name == Title_id) {
+-    char *tmp;
+-    mPlugin->GetTitle(&tmp);
+-    STRINGZ_TO_NPVARIANT(stringCopy(tmp), *result);
++    STRINGZ_TO_NPVARIANT(mPlugin->GetTitle(), *result);
+   }
+   else if (name == dynamicMenu_id) {
+-    char *tmp;
+-    mPlugin->GetDynamicMenu(&tmp);
+-    STRINGZ_TO_NPVARIANT(stringCopy(tmp), *result);
++    STRINGZ_TO_NPVARIANT(mPlugin->GetDynamicMenu(), *result);
+   }
+   else if (name == NumberOfMonitors_id) {
+-    char *tmp;
+-    mPlugin->GetNumberOfMonitors(&tmp);
+-    STRINGZ_TO_NPVARIANT(stringCopy(tmp), *result);
++    STRINGZ_TO_NPVARIANT(mPlugin->GetNumberOfMonitors(), *result);
+   }
+   else if (name == GuestHostName_id) {
+-    char *tmp;
+-    mPlugin->GetGuestHostName(&tmp);
+-    STRINGZ_TO_NPVARIANT(stringCopy(tmp), *result);
++    STRINGZ_TO_NPVARIANT(mPlugin->GetGuestHostName(), *result);
+   }
+   else if (name == HotKey_id) {
+-    char *tmp;
+-    mPlugin->GetHotKeys(&tmp);
+-    STRINGZ_TO_NPVARIANT(stringCopy(tmp), *result);
++    STRINGZ_TO_NPVARIANT(mPlugin->GetHotKeys(), *result);
+   }
+   else if (name == NoTaskMgrExecution_id) {
+-    PRBool aNoTaskMgrExecution;
+-    mPlugin->GetNoTaskMgrExecution(&aNoTaskMgrExecution);
+-    BOOLEAN_TO_NPVARIANT(aNoTaskMgrExecution, *result);
++    BOOLEAN_TO_NPVARIANT(mPlugin->GetNoTaskMgrExecution(), *result);
+   }
+   else if (name == SendCtrlAltdelete_id) {
+-    PRBool aSendCtrlAltdelete;
+-    mPlugin->GetSendCtrlAltdelete(&aSendCtrlAltdelete);  
+-    BOOLEAN_TO_NPVARIANT(aSendCtrlAltdelete, *result);
++    BOOLEAN_TO_NPVARIANT(mPlugin->GetSendCtrlAltdelete(), *result);
+   }
+   else if (name == UsbListenPort_id) {    
+-    unsigned short port;
+-    mPlugin->GetUsbListenPort(&port);
+-    INT32_TO_NPVARIANT(port, *result);
++    INT32_TO_NPVARIANT(mPlugin->GetUsbListenPort(), *result);
+   }
+   else if (name == UsbAutoShare_id) {
+-    PRBool tmp;
+-    mPlugin->GetUsbAutoShare(&tmp);
+-    BOOLEAN_TO_NPVARIANT(tmp, *result);
++    BOOLEAN_TO_NPVARIANT(mPlugin->GetUsbAutoShare(), *result);
+   }
+   else {
+     return false;
+diff --git a/SpiceXPI/src/plugin/plugin.cpp b/SpiceXPI/src/plugin/plugin.cpp
+index 3a5b22b..660f840 100644
+--- a/SpiceXPI/src/plugin/plugin.cpp
++++ b/SpiceXPI/src/plugin/plugin.cpp
+@@ -154,6 +154,17 @@ void NS_DestroyPluginInstance(nsPluginInstanceBase * aPlugin)
+     delete (nsPluginInstance *)aPlugin;
+ }
+ 
++namespace {
++    char *stringCopy(const std::string &src)
++    {
++      char* dest = (char *) NPN_MemAlloc(src.length() + 1);
++      if (dest) {
++        strcpy(dest, src.c_str());
++      }
++      return dest;
++    }
++}
++
+ ////////////////////////////////////////
+ //
+ // nsPluginInstance class implementation
+@@ -237,18 +248,18 @@ NPBool nsPluginInstance::init(NPWindow* aWindow)
+ {
+     mInitialized = TRUE;
+ 
+-    memset (m_HostIP,0,256);
+-    memset (m_Port,0,256);
+-    memset (m_Password,0,256);
+-    memset (m_SecurePort,0,256);
+-    memset (m_CipherSuite,0,256);
+-    memset (m_SSLChannels,0,256);
+-    memset (m_TrustStore, 0 ,sizeof(m_TrustStore));
+-    memset (m_HostSubject, 0 ,sizeof(m_HostSubject));
+-    memset (m_Title,0,256);
+-    memset (m_DynamicMenu,0,256);
+-    memset (m_NumberOfMonitors,0,256);
+-    memset (m_GuestHostName,0,256);
++    m_host_ip.clear();
++    m_port.clear();
++    m_password.clear();
++    m_secure_port.clear();
++    m_cipher_suite.clear();
++    m_ssl_channels.clear();
++    m_trust_store.clear();
++    m_host_subject.clear();
++    m_title.clear();
++    m_dynamic_menu.clear();
++    m_number_of_monitors.clear();
++    m_guest_host_name.clear();
+ 
+     m_FullScreen = PR_FALSE;
+     m_AdminConsole = PR_FALSE;
+@@ -279,148 +290,145 @@ NPBool nsPluginInstance::isInitialized()
+ }
+ 
+ /* attribute string strHost; */
+-void nsPluginInstance::GetHostIP(char * *aHostIP) {
+-    strncpy (*aHostIP, m_HostIP, sizeof (*aHostIP));
++char *nsPluginInstance::GetHostIP() const {
++    return stringCopy(m_host_ip);
+ }
+ void nsPluginInstance::SetHostIP(const char * aHostIP){
+-    strncpy(m_HostIP,aHostIP, sizeof (m_HostIP));
++    m_host_ip = aHostIP;
+ }
+ 
+ /* attribute string strPort; */
+-void nsPluginInstance::GetPort(char * *aPort) {
+-    strncpy (*aPort, m_Port, sizeof (*aPort));
++char *nsPluginInstance::GetPort() const {
++    return stringCopy(m_port);
+ }
+ void nsPluginInstance::SetPort(const char * aPort) {
+-    strncpy(m_Port,aPort, sizeof (m_Port));
++    m_port = aPort;
+ }
+ 
+ /* attribute ing SecurePort; */
+-void nsPluginInstance::GetSecurePort(char * *aSecurePort) {
+-    strncpy (*aSecurePort, m_SecurePort, sizeof (*aSecurePort));
++char *nsPluginInstance::GetSecurePort() const {
++    return stringCopy(m_secure_port);
+ }
+ void nsPluginInstance::SetSecurePort(const char * aSecurePort) {
+-    strncpy(m_SecurePort,aSecurePort, sizeof (m_SecurePort));
++    m_secure_port = aSecurePort;
+ }
+ 
+ 
+ /* attribute string strPassword; */
+-void nsPluginInstance::GetPassword(char * *aPassword) {
+-    strncpy (*aPassword, m_Password, sizeof (*aPassword));
++char *nsPluginInstance::GetPassword() const {
++    return stringCopy(m_password);
+ }
+ void nsPluginInstance::SetPassword(const char * aPassword) {
+-    strncpy(m_Password,aPassword, sizeof (m_Password));
++    m_password = aPassword;
+ }
+ 
+ /* attribute ing Port; */
+-void nsPluginInstance::GetCipherSuite(char * *aCipherSuite) {
+-    strncpy (*aCipherSuite, m_CipherSuite, sizeof (*aCipherSuite));
++char *nsPluginInstance::GetCipherSuite() const {
++    return stringCopy(m_cipher_suite);
+ }
+ void nsPluginInstance::SetCipherSuite(const char * aCipherSuite) {
+-    strncpy(m_CipherSuite,aCipherSuite, sizeof (m_CipherSuite));
++    m_cipher_suite = aCipherSuite;
+ }
+ 
+ /* attribute string strPort; */
+-void nsPluginInstance::GetSSLChannels(char * *aSSLChannels) {
+-    strncpy (*aSSLChannels, m_SSLChannels, sizeof (*aSSLChannels));
++char *nsPluginInstance::GetSSLChannels() const {
++    return stringCopy(m_ssl_channels);
+ }
+ void nsPluginInstance::SetSSLChannels(const char * aSSLChannels) {
+-    strncpy(m_SSLChannels,aSSLChannels, sizeof (m_SSLChannels));
++    m_ssl_channels = aSSLChannels;
+ }
+ 
+ //* attribute string TrustStore; */
+-void nsPluginInstance::GetTrustStore(char * *aTrustStore) {
+-    strncpy (*aTrustStore, m_TrustStore, sizeof (*aTrustStore));
++char *nsPluginInstance::GetTrustStore() const {
++    return stringCopy(m_trust_store);
+ }
+ void nsPluginInstance::SetTrustStore(const char * aTrustStore) {
+-    strncpy(m_TrustStore, aTrustStore, sizeof (m_TrustStore));
++    m_trust_store = aTrustStore;
+ }
+ 
+ //* attribute string HostSubject; */
+-void nsPluginInstance::GetHostSubject(char * *aHostSubject) {
+-    strncpy (*aHostSubject, m_HostSubject, sizeof (*aHostSubject));
++char *nsPluginInstance::GetHostSubject() const {
++    return stringCopy(m_host_subject);
+ }
+ void nsPluginInstance::SetHostSubject(const char * aHostSubject) {
+-    strncpy(m_HostSubject, aHostSubject, sizeof (m_HostSubject));
++    m_host_subject = aHostSubject;
+ }
+ 
+ /* attribute string strFullScreen; */
+-void nsPluginInstance::GetFullScreen(PRBool *aFullScreen) {
+-    *aFullScreen = m_FullScreen;
++PRBool nsPluginInstance::GetFullScreen() const {
++    return m_FullScreen;
+ }
+ void nsPluginInstance::SetFullScreen(PRBool aFullScreen) {
+     m_FullScreen = aFullScreen;
+ }
+ 
+ /* attribute string strTitle; */
+-void nsPluginInstance::GetTitle(char * *aTitle) {
+-    strncpy (*aTitle, m_Title, sizeof (*aTitle));
++char *nsPluginInstance::GetTitle() const {
++    return stringCopy(m_title);
+ }
+ void nsPluginInstance::SetTitle(const char * aTitle) {
+-    strncpy(m_Title,aTitle, sizeof (m_Title));
++    m_title = aTitle;
+ }
+ 
+ /* attribute string strDynamicMenu; */
+-void nsPluginInstance::GetDynamicMenu(char * *aDynamicMenu) {
+-    strncpy (*aDynamicMenu, m_DynamicMenu, sizeof (*aDynamicMenu));
++char *nsPluginInstance::GetDynamicMenu() const {
++    return stringCopy(m_dynamic_menu);
+ }
+ void nsPluginInstance::SetDynamicMenu(const char * aDynamicMenu) {
+-    strncpy(m_DynamicMenu,aDynamicMenu, sizeof (m_DynamicMenu));
++    m_dynamic_menu = aDynamicMenu;
+ }
+ 
+ /* attribute string strNumberOfMonitors; */
+-void nsPluginInstance::GetNumberOfMonitors(char * *aNumberOfMonitors) {
+-    strncpy (*aNumberOfMonitors, m_NumberOfMonitors, sizeof (*aNumberOfMonitors));
++char *nsPluginInstance::GetNumberOfMonitors() const {
++    return stringCopy(m_number_of_monitors);
+ }
+ void nsPluginInstance::SetNumberOfMonitors(const char * aNumberOfMonitors) {
+-    strncpy(m_NumberOfMonitors,aNumberOfMonitors, sizeof (m_NumberOfMonitors));
++    m_number_of_monitors = aNumberOfMonitors;
+ }
+ 
+ /* attribute string strAdminConsole; */
+-void nsPluginInstance::GetAdminConsole(PRBool *aAdminConsole) {
+-    *aAdminConsole = m_AdminConsole;
++PRBool nsPluginInstance::GetAdminConsole() const {
++    return m_AdminConsole;
+ }
+ void nsPluginInstance::SetAdminConsole(PRBool aAdminConsole) {
+     m_AdminConsole = aAdminConsole;
+ }
+ 
+ /* attribute string strGuestHostName; */
+-void nsPluginInstance::GetGuestHostName(char * *aGuestHostName) {
+-    strncpy (*aGuestHostName, m_GuestHostName, sizeof (*aGuestHostName));
++char *nsPluginInstance::GetGuestHostName() const {
++    return stringCopy(m_guest_host_name);
+ }
+ void nsPluginInstance::SetGuestHostName(const char * aGuestHostName) {
+-    strncpy(m_GuestHostName,aGuestHostName, sizeof (m_GuestHostName));
++    m_guest_host_name = aGuestHostName;
+ }
+ 
+ /* attribute string strHotKeys; */
+-void nsPluginInstance::GetHotKeys(char * *aHotKeys) {
+-    strncpy (*aHotKeys, m_HotKeys, sizeof (*aHotKeys));
++char *nsPluginInstance::GetHotKeys() const {
++    return stringCopy(m_hot_keys);
+ }
+ void nsPluginInstance::SetHotKeys(const char * aHotKeys) {
+-    strncpy(m_HotKeys,aHotKeys, sizeof (m_HotKeys));
++    m_hot_keys = aHotKeys;
+ }
+ 
+ /* attribute string strNoTaskMgrExecution; */
+-void nsPluginInstance::GetNoTaskMgrExecution(PRBool *aNoTaskMgrExecution) {
+-    *aNoTaskMgrExecution = m_NoTaskMgrExecution;
++PRBool nsPluginInstance::GetNoTaskMgrExecution() const {
++    return m_NoTaskMgrExecution;
+ }
+ void nsPluginInstance::SetNoTaskMgrExecution(PRBool aNoTaskMgrExecution) {
+     m_NoTaskMgrExecution = aNoTaskMgrExecution;
+-;
+ }
+ 
+ /* attribute string strSendCtrlAltdelete; */
+-void nsPluginInstance::GetSendCtrlAltdelete(PRBool *aSendCtrlAltdelete) {
+-    *aSendCtrlAltdelete = m_SendCtrlAltdelete;
++PRBool nsPluginInstance::GetSendCtrlAltdelete() const {
++    return m_SendCtrlAltdelete;
+ }
+ void nsPluginInstance::SetSendCtrlAltdelete(PRBool aSendCtrlAltdelete) {
+     m_SendCtrlAltdelete = aSendCtrlAltdelete;
+ }
+ 
+ /* attribute string UsbListenPort; */
+-void nsPluginInstance::GetUsbListenPort(unsigned short *aUsbPort) {
+-    if (aUsbPort != NULL) {
+-        *aUsbPort = m_UsbPort;
+-    }
++unsigned short nsPluginInstance::GetUsbListenPort() const {
++    return m_UsbPort;
+ }
+ 
+ void nsPluginInstance::SetUsbListenPort(unsigned short aUsbPort) {
+@@ -428,10 +436,8 @@ void nsPluginInstance::SetUsbListenPort(unsigned short aUsbPort) {
+ }
+ 
+ /* attribute boolean UsbAutoShare; */
+-void nsPluginInstance::GetUsbAutoShare(PRBool *aUsbAutoShare) {
+-    if (aUsbAutoShare != NULL) {
+-        *aUsbAutoShare = m_UsbAutoShare;
+-    }
++PRBool nsPluginInstance::GetUsbAutoShare() const {
++    return m_UsbAutoShare;
+ }
+ 
+ void nsPluginInstance::SetUsbAutoShare(PRBool aUsbAutoShare) {
+@@ -479,7 +485,7 @@ void nsPluginInstance::send_value(uint32_t id, uint32_t value)
+     write_to_pipe(&msg, sizeof(msg));
+ }
+ 
+-void nsPluginInstance::send_str(uint32_t id, char* str)
++void nsPluginInstance::send_str(uint32_t id, const char* str)
+ {
+     if (!strlen(str)) {
+         return;
+@@ -493,7 +499,7 @@ void nsPluginInstance::send_str(uint32_t id, char* str)
+     free(msg);
+ }
+ 
+-void nsPluginInstance::send_wstr(uint32_t id, wchar_t* str)
++void nsPluginInstance::send_wstr(uint32_t id, const wchar_t* str)
+ {
+     size_t len = wcslen(str);
+     if (!len) {
+@@ -588,7 +594,7 @@ void nsPluginInstance::Connect() {
+         if (fd != -1) {
+             fp = fdopen (fd,"w+");
+             if (fp != NULL) {
+-                fputs(m_TrustStore, fp);
++                fputs(m_trust_store.c_str(), fp);
+                 fflush(fp);
+                 fsync(fd);
+                 fclose(fp);
+@@ -605,39 +611,36 @@ void nsPluginInstance::Connect() {
+         }
+ 
+         send_init();
+-        send_str(CONTROLLER_HOST, m_HostIP);
+-        send_value(CONTROLLER_PORT, atoi(m_Port));
+-        send_value(CONTROLLER_SPORT, atoi(m_SecurePort));
++        send_str(CONTROLLER_HOST, m_host_ip.c_str());
++        send_value(CONTROLLER_PORT, atoi(m_port.c_str()));
++        send_value(CONTROLLER_SPORT, atoi(m_secure_port.c_str()));
+         send_value(CONTROLLER_FULL_SCREEN,
+                    (m_FullScreen == PR_TRUE ? CONTROLLER_SET_FULL_SCREEN : 0) |
+                    (m_AdminConsole == PR_FALSE ? CONTROLLER_AUTO_DISPLAY_RES : 0));
+-        send_str(CONTROLLER_PASSWORD, m_Password);
+-        send_str(CONTROLLER_TLS_CIPHERS, m_CipherSuite);
+-        send_str(CONTROLLER_SET_TITLE, m_Title);
++        send_str(CONTROLLER_PASSWORD, m_password.c_str());
++        send_str(CONTROLLER_TLS_CIPHERS, m_cipher_suite.c_str());
++        send_str(CONTROLLER_SET_TITLE, m_title.c_str());
+ 
+         /*
+          * HACK -- remove leading s from m_SSLChannels, e.g. "main" not "smain"
+          * RHEL5 uses 'smain' and 'sinpusts
+          * RHEL6 uses 'main'  and 'inputs'
+          */
+-        if (1) {
+-            int i;
+-            for (i=0; i<sizeof(m_SSLChannels); i++) {
+-                char *p = &m_SSLChannels[i];
+-                if (!*p)
+-                    break;
+-                if ((strncmp("smain",   p, 5) == 0) ||
+-                    (strncmp("sinputs", p, 7) == 0)) {
+-                    while ((*p = *(p+1)) != '\0') /* copy is done in condition */
+-                    p++;
+-                 }
+-            }
+-        } /* HACK */
++        std::size_t found = 0;
++        while ((found = m_ssl_channels.find("smain", found)) != std::string::npos) {
++            m_ssl_channels.replace(found, 5, "main");
++        }
++
++        found = 0;
++        while ((found = m_ssl_channels.find("sinputs", found)) != std::string::npos) {
++            m_ssl_channels.replace(found, 7, "inputs");
++        }
++        /* HACK */
+ 
+-        send_str(CONTROLLER_SECURE_CHANNELS, m_SSLChannels);
++        send_str(CONTROLLER_SECURE_CHANNELS, m_ssl_channels.c_str());
+         send_str(CONTROLLER_CA_FILE, gs_TrustStoreFile);
+-        send_str(CONTROLLER_HOST_SUBJECT, m_HostSubject);
+-        send_str(CONTROLLER_HOTKEYS, m_HotKeys);
++        send_str(CONTROLLER_HOST_SUBJECT, m_host_subject.c_str());
++        send_str(CONTROLLER_HOTKEYS, m_hot_keys.c_str());
+         send_msg(CONTROLLER_CONNECT);
+         send_msg(CONTROLLER_SHOW);
+ 
+@@ -713,7 +716,7 @@ void nsPluginInstance::ExecuteUsbCtrl()
+         // TBD: Find executable path.
+         execl("/usr/bin/usbrdrctrl",
+             "/usr/bin/usbrdrctrl",
+-            m_GuestHostName,
++            m_guest_host_name.c_str(),
+             port,
+             "-c",
+             conn_name,
+diff --git a/SpiceXPI/src/plugin/plugin.h b/SpiceXPI/src/plugin/plugin.h
+index 0245c48..22c8102 100644
+--- a/SpiceXPI/src/plugin/plugin.h
++++ b/SpiceXPI/src/plugin/plugin.h
+@@ -74,82 +74,82 @@ public:
+     void SetUsbFilter(const char * aUsbFilter);
+     
+     /* attribute ing Host; */
+-    void GetHostIP(char * *aHosIPt);
++    char *GetHostIP() const;
+     void SetHostIP(const char * aHostIP);
+     
+     /* attribute ing Port; */
+-    void GetPort(char * *aPort);
++    char *GetPort() const;
+     void SetPort(const char * aPort);
+     
+     /* attribute ing Password; */
+-    void GetPassword(char * *aPassword);
++    char *GetPassword() const;
+     void SetPassword(const char * aPassword);
+     
+     /* attribute ing SecurePort; */
+-    void GetSecurePort(char * *aSecurePort);
++    char *GetSecurePort() const;
+     void SetSecurePort(const char * aSecurePort);
+     
+     /* attribute ing Port; */
+-    void GetCipherSuite(char * *aCipherSuite);
++    char *GetCipherSuite() const;
+     void SetCipherSuite(const char * aCipherSuite);
+     
+     /* attribute ing Port; */
+-    void GetSSLChannels(char * *aSSLChannels);
++    char *GetSSLChannels() const;
+     void SetSSLChannels(const char * aSSLChannels);
+     
+     
+      /* attribute ing TrustStore; */
+-    void GetTrustStore(char * *aTrustStore);
++    char *GetTrustStore() const;
+     void SetTrustStore(const char * aTrustStore);
+     
+     
+      /* attribute ing HostSubject; */
+-    void GetHostSubject(char * *aHostSubject);
++    char *GetHostSubject() const;
+     void SetHostSubject(const char * aHostSubject);
+     
+     
+     /* attribute ing FullScreen; */
+-    void GetFullScreen(PRBool *aFullScreen);
++    PRBool GetFullScreen() const;
+     void SetFullScreen(PRBool aFullScreen);
+     
+     /* attribute ing Port; */
+-    void GetTitle(char * *aTitle);
++    char *GetTitle() const;
+     void SetTitle(const char * aTitle);
+     
+     /* attribute ing Port; */
+-    void GetDynamicMenu(char * *aDynamicMenu);
++    char *GetDynamicMenu() const;
+     void SetDynamicMenu(const char * aDynamicMenu);
+     
+     /* attribute ing Port; */
+-    void GetNumberOfMonitors(char * *aNumberOfMonitors);
++    char *GetNumberOfMonitors() const;
+     void SetNumberOfMonitors(const char * aNumberOfMonitors);
+     
+     /* attribute ing AdminConsole; */
+-    void GetAdminConsole(PRBool *aAdminConsole);
++    PRBool GetAdminConsole() const;
+     void SetAdminConsole(PRBool aAdminConsole);
+     
+     /* attribute ing GuestHostName; */
+-    void GetGuestHostName(char * *aGuestHostName);
++    char *GetGuestHostName() const;
+     void SetGuestHostName(const char * aGuestHostName);
+     
+     /* attribute ing HotKeys; */
+-    void GetHotKeys(char * *aHotKeys);
++    char *GetHotKeys() const;
+     void SetHotKeys(const char * aHotKeys);
+     
+     /* attribute ing NoTaskMgrExecution; */
+-    void GetNoTaskMgrExecution(PRBool *aNoTaskMgrExecution);
++    PRBool GetNoTaskMgrExecution() const;
+     void SetNoTaskMgrExecution(PRBool aNoTaskMgrExecution);
+     
+     /* attribute ing SendCtrlAltdelete; */
+-    void GetSendCtrlAltdelete(PRBool *aSendCtrlAltdelete);
++    PRBool GetSendCtrlAltdelete() const;
+     void SetSendCtrlAltdelete(PRBool aSendCtrlAltdelete);
+     
+     /* attribute unsigned short UsbListenPort; */
+-    void GetUsbListenPort(unsigned short *aUsbPort);
++    unsigned short GetUsbListenPort() const;
+     void SetUsbListenPort(unsigned short aUsbPort);
+     
+     /* attribute boolean UsbAutoShare; */
+-    void GetUsbAutoShare(PRBool *aUsbAutoShare);
++    PRBool GetUsbAutoShare() const;
+     void SetUsbAutoShare(PRBool aUsbAutoShare);
+     
+     NPObject* getScriptablePeer();
+@@ -165,8 +165,8 @@ private:
+     void send_init();
+     void send_msg(uint32_t id);
+     void send_value(uint32_t id, uint32_t value);
+-    void send_str(uint32_t id, char* str);
+-    void send_wstr(uint32_t id, wchar_t* str);
++    void send_str(uint32_t id, const char* str);
++    void send_wstr(uint32_t id, const wchar_t* str);
+   
+ private:
+     
+@@ -183,21 +183,21 @@ private:
+     char m_strPort[256];
+     char m_strPassword[256];
+     PRBool m_fIPC;
+-    char m_HostIP[256];
+-    char m_Port[256];
+-    char m_Password[256];
+-    char m_SecurePort[256];
+-    char m_CipherSuite[256];
+-    char m_SSLChannels[256];
+-    char m_TrustStore[4096];
+-    char m_HostSubject[512];
++    std::string m_host_ip;
++    std::string m_port;
++    std::string m_password;
++    std::string m_secure_port;
++    std::string m_cipher_suite;
++    std::string m_ssl_channels;
++    std::string m_trust_store;
++    std::string m_host_subject;
+     PRBool m_FullScreen;
+     PRBool m_AdminConsole;
+-    char m_Title[256];
+-    char m_DynamicMenu[256];
+-    char m_NumberOfMonitors[256];
+-    char m_GuestHostName[256];
+-    char m_HotKeys[256];
++    std::string m_title;
++    std::string m_dynamic_menu;
++    std::string m_number_of_monitors;
++    std::string m_guest_host_name;
++    std::string m_hot_keys;
+     PRBool m_NoTaskMgrExecution;
+     PRBool m_SendCtrlAltdelete;
+     unsigned short m_UsbPort;
+-- 
+1.7.4
+

@@ -1,0 +1,40 @@
+From 257ea0aed5341db06f5a52bc287bd048925f9285 Mon Sep 17 00:00:00 2001
+From: Peter Hatina <phatina@redhat.com>
+Date: Thu, 31 Mar 2011 08:59:26 +0200
+Subject: [PATCH] usbrdrctrl log symlink attack - fixed
+
+---
+ spice-xpi-2.4/SpiceXPI/src/plugin/plugin.cpp |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/SpiceXPI/src/plugin/plugin.cpp b/SpiceXPI/src/plugin/plugin.cpp
+index 5b1c298..b1f95d3 100644
+--- a/SpiceXPI/src/plugin/plugin.cpp
++++ b/SpiceXPI/src/plugin/plugin.cpp
+@@ -74,6 +74,7 @@ static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
+ 
+ #include "controller.h"
+ #include <fstream>
++#include <sstream>
+ #include "debug.h"
+ 
+ #include <log4cpp/PropertyConfigurator.hh>
+@@ -669,10 +670,12 @@ void nsPluginInstance::ExecuteUsbCtrl()
+ 
+     if (m_UsbCtrlPid == 0) {
+     
+-        char logname[64];
+-        snprintf(logname, sizeof(logname), "/tmp/usbrdrctrl-%d.log", getpid());
++        std::stringstream ss;
++        std::string logname;
++        ss << mHomeDir << "/usbrdrctrl-" << getpid() << ".log";
++        ss >> logname;
+         
+-        int logfd = open(logname, O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
++        int logfd = open(logname.c_str(), O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+         if (logfd > 0) {
+             dup2(logfd, 1);
+         }
+-- 
+1.7.4
+
